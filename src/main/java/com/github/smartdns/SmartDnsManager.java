@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -108,8 +109,7 @@ public class SmartDnsManager {
      * @param port Ports to probe (default 80, 443 if empty)
      */
     public void register(String host, List<String> ips, int port) {
-        Integer fport = port <= 0 ? 443 : port;
-        managedDomains.put(host, new DomainConfig(host, ips, fport));
+        managedDomains.put(host, new DomainConfig(host, ips, port));
     }
 
     /**
@@ -162,6 +162,10 @@ public class SmartDnsManager {
     }
 
     protected boolean isHealthy(String ip, Integer port) {
+        // 不配置端口，则不用探测
+        if(Objects.isNull(port) || port <= 0) {
+            return true;
+        }
         try (Socket socket = new Socket()) {
             socket.connect(new InetSocketAddress(ip, port), 1000); // 1s timeout
         } catch (IOException e) {
